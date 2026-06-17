@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Товары — Админ-панель{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'css/admin-style.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold h3 mb-0">Товары</h1>
+        <a href="{% url 'accounts:admin_product_create' %}" class="btn btn-dark rounded-0">+ Добавить товар</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3">Фото</th>
+                        <th class="py-3">Название</th>
+                        <th class="py-3">Категория</th>
+                        <th class="py-3">Цена</th>
+                        <th class="py-3">Наличие</th>
+                        <th class="py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="border-bottom">
+                        <td class="py-3 px-4 align-middle">#{{ product.id }}</td>
+                        <td class="py-3 align-middle">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" style="width: 45px; height: 45px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light" style="width: 45px; height: 45px;"></div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 align-middle">{{ product.name|truncatechars:40 }}</td>
+                        <td class="py-3 align-middle">{{ product.category.name }}</td>
+                        <td class="py-3 align-middle fw-semibold">{{ product.price|floatformat:0 }} ₽</td>
+                        <td class="py-3 align-middle">
+                            {% if product.available %}
+                            <span class="status-icon available"></span> В наличии
+                            {% else %}
+                            <span class="status-icon unavailable"></span> Нет
+                            {% endif %}
+                        </td>
+                        <td class="py-3 align-middle">
+                            <a href="{% url 'accounts:admin_product_edit' product.id %}" class="icon-btn d-inline-flex me-1">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
+                                    <path d="M4 20h16"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'accounts:admin_product_delete' product.id %}" class="icon-btn d-inline-flex">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

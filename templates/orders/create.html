@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Оформление заказа — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="fw-bold mb-4 display-5">Оформление заказа</h1>
+
+            <div class="row g-4">
+                <!-- Форма заказа -->
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Имя</label>
+                                        {{ form.first_name }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Фамилия</label>
+                                        {{ form.last_name }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Email</label>
+                                        {{ form.email }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Телефон</label>
+                                        {{ form.phone }}
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Способ доставки</label>
+                                        {{ form.delivery_method }}
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Адрес доставки</label>
+                                        {{ form.address }}
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small text-uppercase text-muted fw-semibold">Комментарий</label>
+                                        {{ form.comment }}
+                                    </div>
+                                </div>
+
+                                <!-- Способ оплаты -->
+                                <div class="mt-4">
+                                    <h5 class="fw-bold mb-3">Способ оплаты</h5>
+                                    <div class="d-flex flex-column gap-3">
+                                        <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor: pointer;">
+                                            <input type="radio" name="payment_method" value="online" class="form-check-input m-0">
+                                            <div style="width: 40px; text-align: center;">
+                                                <img src="{% static 'images/yumoney.png' %}" style="width: 32px;">
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">Онлайн оплата (ЮMoney)</div>
+                                                <div class="small text-muted">Банковская карта, СБП, ЮMoney кошелёк</div>
+                                            </div>
+                                        </label>
+
+                                        <label class="d-flex align-items-center gap-3 p-3 border rounded-3" style="cursor: pointer;">
+                                            <input type="radio" name="payment_method" value="cash" class="form-check-input m-0" checked>
+                                            <div style="width: 40px; text-align: center;">
+                                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">Наличными при получении</div>
+                                                <div class="small text-muted">Оплата курьеру или в пункте выдачи</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-semibold mt-4">
+                                    Оформить заказ →
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Сводка заказа -->
+                <div class="col-md-5">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3">Ваш заказ</h5>
+
+                            {% for item in cart %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{{ item.product.name }} x {{ item.quantity }}</span>
+                                <span class="fw-semibold">{{ item.total_price|floatformat:0 }} ₽</span>
+                            </div>
+                            {% endfor %}
+
+                            <hr class="my-3">
+
+                            {% if has_discount %}
+                            <div class="d-flex justify-content-between text-success mb-2">
+                                <span>Скидка 10%</span>
+                                <span class="fw-semibold">-{{ discount_amount|floatformat:0 }} ₽</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between fw-bold fs-5">
+                                <span>Итого</span>
+                                <span>{{ final_total|floatformat:0 }} ₽</span>
+                            </div>
+
+                            {% if has_discount %}
+                            <div class="alert alert-success mt-3 py-2 small">
+                                 Промокод применён! Вы экономите {{ discount_amount|floatformat:0 }} ₽
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 12px;
+        border-color: #e5e5e5;
+        padding: 12px 16px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #000;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}

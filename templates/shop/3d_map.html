@@ -1,0 +1,946 @@
+{% extends "base_fullscreen.html" %}
+{% load static %}
+{% block title %}3D Карта горы — ALPGEAR{% endblock %}
+
+{% block extra_head %}
+<style>
+    #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        background: #0a1030;
+    }
+    #three-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    .loading-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: #060b18;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.8s ease;
+    }
+    .loading-screen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .loading-icon {
+        font-size: 48px;
+        margin-bottom: 24px;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.15); opacity: 1; }
+    }
+    .loading-title {
+        color: #ffb347;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+    .loading-status {
+        color: rgba(255,255,255,0.5);
+        font-family: monospace;
+        font-size: 12px;
+        margin-bottom: 16px;
+    }
+    .progress-track {
+        width: 280px;
+        height: 3px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #ffb347, #ff8800);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+    .instruction {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.5);
+        color: white;
+        padding: 5px 15px;
+        font-size: 11px;
+        z-index: 100;
+        pointer-events: none;
+    }
+    .nav-top {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+    }
+    .nav-btn {
+        pointer-events: auto;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 8px 18px;
+        text-decoration: none;
+        font-size: 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+        transition: 0.2s;
+    }
+    .nav-btn:hover {
+        background: rgba(0,0,0,0.8);
+        border-color: #ffb347;
+        color: #ffb347;
+    }
+    .product-panel {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 15px 20px;
+        border-left: 3px solid #ffb347;
+        min-width: 250px;
+        z-index: 200;
+        transform: translateX(-120%);
+        transition: transform 0.3s ease;
+        pointer-events: auto;
+    }
+    .product-panel.show {
+        transform: translateX(0);
+    }
+    .product-panel h4 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+    }
+    .product-panel .price {
+        color: #ffb347;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 8px 0;
+    }
+    .product-panel button {
+        background: #ffb347;
+        border: none;
+        padding: 8px 15px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .product-panel button:hover {
+        background: #ff9900;
+    }
+    .close-panel {
+        float: right;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+        margin-top: -5px;
+    }
+    .close-panel:hover {
+        color: #ffb347;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="canvas-container">
+    <canvas id="three-canvas"></canvas>
+</div>
+
+<div class="product-panel" id="productPanel">
+    <button class="close-panel" id="closePanel">×</button>
+    <h4 id="productName">Товар</h4>
+    <div class="price" id="productPrice">0 ₽</div>
+    <p id="productDesc" style="font-size: 12px; margin: 8px 0;"></p>
+    <button id="buyButton">В корзину →</button>
+</div>
+
+<div class="nav-top">
+    <a href="{% url 'home' %}" class="nav-btn">← На главную</a>
+    <a href="{% url 'cart:cart_detail' %}" class="nav-btn">🛒 Корзина</a>
+</div>
+
+<div class="instruction" id="instruction" style="display:none">🔗 Клик по карабину — информация о товаре</div>
+
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-icon">🏔️</div>
+    <div class="loading-title">ALPGEAR 3D</div>
+    <div class="loading-status" id="loadingStatus">Подготовка сцены...</div>
+    <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+</div>
+
+<!-- CSRF-токен для JavaScript -->
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // CSRF-токен
+    const csrfToken = document.getElementById('csrfToken').value;
+
+    const productsData = {{ products_json|safe }};
+
+    // Сортируем товары по цене
+    const sortedProducts = [...productsData].sort((a, b) => a.price - b.price);
+
+    // === ДИНАМИЧЕСКИЕ КООРДИНАТЫ (МАТЕМАТИЧЕСКАЯ СПИРАЛЬ БЕЗ СЛИПАНИЯ) ===
+    // Генерируем уникальные X и Z координаты по золотой спирали Фибоначчи
+    const markerPositions = [];
+    const numProducts = sortedProducts.length;
+
+    for (let i = 0; i < numProducts; i++) {
+        // Золотой угол (~137.5 градусов или 2.3999 радиан) гарантирует максимальный разброс по кругу
+        const angle = i * 2.3999;
+        
+        // Нормализованный параметр (0 - вершина, 1 - подножие)
+        const t = i / (numProducts - 1 || 1);
+        
+        // Радиус распределения: от 3.5 единиц (у самой вершины) до 22.0 единиц (по склонам горы)
+        const radius = 3.5 + t * 18.5;
+        
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        // Стартовая примерная высота склона горы
+        const y = 3.5 - t * 8.5; 
+        
+        markerPositions.push({ x, y, z });
+    }
+
+    // Функция создания 3D карабина
+    function createCarabiner(x, y, z, color, metalness = 0.7) {
+        const group = new THREE.Group();
+
+        const material = new THREE.MeshStandardMaterial({
+            color: color,
+            metalness: metalness,
+            roughness: 0.3,
+            emissive: color,
+            emissiveIntensity: 0.1
+        });
+
+        // Дуга
+        const torusGeo = new THREE.TorusGeometry(0.45, 0.08, 16, 48, Math.PI * 1.8);
+        const arch = new THREE.Mesh(torusGeo, material);
+        arch.rotation.x = Math.PI / 2;
+        arch.rotation.z = 0.3;
+        group.add(arch);
+
+        // Прямая часть
+        const straightGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 8);
+        const straight = new THREE.Mesh(straightGeo, material);
+        straight.position.y = -0.35;
+        group.add(straight);
+
+        // Муфта
+        const ringGeo = new THREE.TorusGeometry(0.12, 0.04, 8, 24);
+        const ring = new THREE.Mesh(ringGeo, material);
+        ring.position.y = -0.75;
+        ring.rotation.x = Math.PI / 2;
+        group.add(ring);
+
+        // Защёлка
+        const latchGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const latch = new THREE.Mesh(latchGeo, material);
+        latch.position.set(0.3, 0.2, 0);
+        group.add(latch);
+
+        group.position.set(x, y, z);
+        return group;
+    }
+
+    // === СЦЕНА ===
+    const scene = new THREE.Scene();
+    // Глубокий туман, сливающийся с нижней частью градиентного неба у горизонта
+    scene.fog = new THREE.FogExp2(0x0c223c, 0.007);
+
+    // === НЕБО (SKY DOME С ГРАДИЕНТОМ) ===
+    const skyGeo = new THREE.SphereGeometry(350, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    
+    // Создаем процедурный градиент на canvas для плавного перехода цветов
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 256;
+    skyCanvas.height = 512;
+    const skyCtx = skyCanvas.getContext('2d');
+    
+    const skyGradient = skyCtx.createLinearGradient(0, 0, 0, skyCanvas.height);
+    skyGradient.addColorStop(0, '#020307');       // Зенит: глубокий черный космос
+    skyGradient.addColorStop(0.3, '#080a17');     // Темно-синяя полярная ночь
+    skyGradient.addColorStop(0.6, '#140c2a');     // Глубокий космический фиолетовый
+    skyGradient.addColorStop(0.8, '#0a1d35');     // Мягкий синий сумеречный свет
+    skyGradient.addColorStop(1.0, '#1d4860');     // Свечение горизонта у земли
+    
+    skyCtx.fillStyle = skyGradient;
+    skyCtx.fillRect(0, 0, skyCanvas.width, skyCanvas.height);
+    
+    const skyTexture = new THREE.CanvasTexture(skyCanvas);
+    const skyMat = new THREE.MeshBasicMaterial({
+        map: skyTexture,
+        side: THREE.BackSide,
+        fog: false
+    });
+    
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
+
+    // === ЛУНА И ОРЕОЛ (MOON WITH GLOW) ===
+    const moonGroup = new THREE.Group();
+    moonGroup.position.set(100, 85, -160);
+    
+    // Ядро луны
+    const moonGeo = new THREE.SphereGeometry(8, 32, 32);
+    const moonMat = new THREE.MeshBasicMaterial({
+        color: 0xfffcf0,
+        fog: false
+    });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonGroup.add(moonMesh);
+
+    // Свечение вокруг луны (Halo Sprite)
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = 128;
+    glowCanvas.height = 128;
+    const glowCtx = glowCanvas.getContext('2d');
+    const glowGrad = glowCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    glowGrad.addColorStop(0, 'rgba(255, 252, 240, 1.0)');
+    glowGrad.addColorStop(0.12, 'rgba(255, 252, 240, 0.65)');
+    glowGrad.addColorStop(0.35, 'rgba(255, 244, 210, 0.22)');
+    glowGrad.addColorStop(1, 'rgba(255, 244, 210, 0)');
+    glowCtx.fillStyle = glowGrad;
+    glowCtx.fillRect(0, 0, 128, 128);
+    
+    const glowTexture = new THREE.CanvasTexture(glowCanvas);
+    const glowMat = new THREE.SpriteMaterial({
+        map: glowTexture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const glowSprite = new THREE.Sprite(glowMat);
+    glowSprite.scale.set(45, 45, 1);
+    moonGroup.add(glowSprite);
+    
+    scene.add(moonGroup);
+
+    // === КАМЕРА ===
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(20, 15, 25);
+    camera.lookAt(0, -5, 0);
+
+    // === РЕНДЕРЕР ===
+    const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('three-canvas') });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Мягкие тени премиум-качества
+
+    // === КОНТРОЛЫ ===
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.3; // Чуть медленнее для большего величия
+    controls.enableZoom = true;
+    controls.target.set(0, -5, 0);
+
+    // === ОСВЕЩЕНИЕ ===
+    const ambientLight = new THREE.AmbientLight(0x282f48, 0.75); // Мягкий ночной заполняющий свет
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xd9e6ff, 1.4); // Направленный лунный свет
+    mainLight.position.set(100, 85, -160); // Ровно со стороны Луны
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.camera.near = 10;
+    mainLight.shadow.camera.far = 400;
+    const d = 100;
+    mainLight.shadow.camera.left = -d;
+    mainLight.shadow.camera.right = d;
+    mainLight.shadow.camera.top = d;
+    mainLight.shadow.camera.bottom = -d;
+    mainLight.shadow.bias = -0.0003;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.PointLight(0x7da4cc, 0.35); // Подсветка теней синевой
+    fillLight.position.set(0, 15, 0);
+    scene.add(fillLight);
+
+    const backLight = new THREE.PointLight(0xffbfa3, 0.45); // Закатный теплый контурный свет с горизонта
+    backLight.position.set(-70, 5, 70);
+    scene.add(backLight);
+
+    // === ЗЕМЛЯ (ДИОРАМА И ДЕКОРАЦИИ) ===
+    const groundRadius = 95;
+    const groundHeight = 8;
+    const groundGeo = new THREE.CylinderGeometry(groundRadius, groundRadius + 3, groundHeight, 64);
+    
+    // Процедурная генерация текстуры земли на Canvas
+    const groundCanvas = document.createElement('canvas');
+    groundCanvas.width = 1024;
+    groundCanvas.height = 1024;
+    const gctx = groundCanvas.getContext('2d');
+
+    // Базовый цвет — тёплая зелёно-коричневая почва
+    gctx.fillStyle = '#5a6b42';
+    gctx.fillRect(0, 0, 1024, 1024);
+
+    // Функция простого шума для генерации текстуры
+    function pseudoNoise(x, y, seed) {
+        const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+        return n - Math.floor(n);
+    }
+
+    // Слой 1: Крупный рельеф (пятна земли, камня и травы)
+    for (let px = 0; px < 1024; px += 4) {
+        for (let py = 0; py < 1024; py += 4) {
+            const n1 = pseudoNoise(px * 0.008, py * 0.008, 1.0);
+            const n2 = pseudoNoise(px * 0.02, py * 0.02, 5.0);
+            const blend = n1 * 0.6 + n2 * 0.4;
+
+            if (blend > 0.65) {
+                // Тёмная земля / камни — коричневые
+                const v = Math.floor(45 + blend * 25);
+                gctx.fillStyle = `rgb(${v + 15}, ${v + 5}, ${v - 5})`;
+                gctx.fillRect(px, py, 5, 5);
+            } else if (blend > 0.35) {
+                // Трава — оливково-зелёная
+                const v = Math.floor(65 + blend * 40);
+                gctx.fillStyle = `rgb(${v - 10}, ${v + 15}, ${v - 25})`;
+                gctx.fillRect(px, py, 4, 4);
+            } else {
+                // Светлая сухая трава / песок — жёлто-коричневый
+                const v = Math.floor(130 + blend * 50);
+                gctx.fillStyle = `rgb(${v + 10}, ${v - 5}, ${v - 40})`;
+                gctx.fillRect(px, py, 4, 4);
+            }
+        }
+    }
+
+    // Слой 2: Мелкий зернистый шум (крошка, песчинки, травинки)
+    for (let i = 0; i < 18000; i++) {
+        const gx = Math.random() * 1024;
+        const gy = Math.random() * 1024;
+        const brightness = Math.floor(Math.random() * 60 + 80);
+        const alpha = 0.08 + Math.random() * 0.15;
+        gctx.fillStyle = `rgba(${brightness + 15}, ${brightness + 20}, ${brightness - 10}, ${alpha})`;
+        gctx.fillRect(gx, gy, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+
+    // Слой 3: Тёмные трещины и разломы
+    gctx.strokeStyle = 'rgba(30, 25, 20, 0.12)';
+    gctx.lineWidth = 1;
+    for (let i = 0; i < 60; i++) {
+        gctx.beginPath();
+        let cx = Math.random() * 1024;
+        let cy = Math.random() * 1024;
+        gctx.moveTo(cx, cy);
+        const segments = 3 + Math.floor(Math.random() * 6);
+        for (let s = 0; s < segments; s++) {
+            cx += (Math.random() - 0.5) * 80;
+            cy += (Math.random() - 0.5) * 80;
+            gctx.lineTo(cx, cy);
+        }
+        gctx.stroke();
+    }
+
+    // Слой 4: Пятна мха / тёмной зелени в низинах
+    for (let i = 0; i < 35; i++) {
+        const mx = Math.random() * 1024;
+        const my = Math.random() * 1024;
+        const mr = 8 + Math.random() * 25;
+        const grad = gctx.createRadialGradient(mx, my, 0, mx, my, mr);
+        grad.addColorStop(0, 'rgba(45, 62, 40, 0.18)');
+        grad.addColorStop(1, 'rgba(45, 62, 40, 0)');
+        gctx.fillStyle = grad;
+        gctx.fillRect(mx - mr, my - mr, mr * 2, mr * 2);
+    }
+
+    const groundTexture = new THREE.CanvasTexture(groundCanvas);
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(3, 3); // Повтор для мелкой детализации
+
+    // Материалы для цилиндра diorama
+    const sideMat = new THREE.MeshStandardMaterial({
+        color: 0x141822,
+        roughness: 0.95,
+        metalness: 0.1,
+        flatShading: true
+    });
+    
+    const topMat = new THREE.MeshStandardMaterial({
+        map: groundTexture,
+        roughness: 0.92,
+        metalness: 0.02,
+        bumpScale: 0.3
+    });
+    
+    const groundMaterials = [sideMat, topMat, sideMat];
+    const groundMesh = new THREE.Mesh(groundGeo, groundMaterials);
+    groundMesh.position.y = -10.0;
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    // === ТОПОГРАФИЧЕСКАЯ СЕТКА КАРТЫ ===
+    const gridHelper = new THREE.GridHelper(groundRadius * 2 - 10, 24, 0x486cb7, 0x223250);
+    gridHelper.position.y = -5.98; // Чуть выше верхней грани цилиндра
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.4;
+    scene.add(gridHelper);
+
+    // Концентрические радарные кольца (изолинии карты)
+    const ringsGroup = new THREE.Group();
+    const ringRadii = [25, 52, 78];
+    ringRadii.forEach(radius => {
+        const ringGeo = new THREE.RingGeometry(radius, radius + 0.4, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: 0x486cb7,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.3
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = -5.97;
+        ringsGroup.add(ring);
+    });
+    scene.add(ringsGroup);
+
+    // === ДЕКОРАЦИИ: СОСНОВЫЙ ЛЕС И КРИСТАЛЛЫ ===
+    const decorationGroup = new THREE.Group();
+    const crystals = []; // Для анимации в рендере
+
+    // Функция создания низкополигональной ели
+    function createPineTree(scale = 1.0) {
+        const tree = new THREE.Group();
+        
+        // Ствол
+        const trunkGeo = new THREE.CylinderGeometry(0.12, 0.22, 1.2, 5);
+        const trunkMat = new THREE.MeshStandardMaterial({
+            color: 0x281a14,
+            roughness: 0.95,
+            flatShading: true
+        });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = 0.6;
+        trunk.castShadow = true;
+        tree.add(trunk);
+        
+        // Хвоя из 3 ярусов
+        const foliageMat = new THREE.MeshStandardMaterial({
+            color: 0x1a3020, // Красивый благородный еловый цвет
+            roughness: 0.85,
+            flatShading: true
+        });
+        
+        const cone1 = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.3, 5), foliageMat);
+        cone1.position.y = 1.3;
+        cone1.castShadow = true;
+        cone1.receiveShadow = true;
+        tree.add(cone1);
+        
+        const cone2 = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.0, 5), foliageMat);
+        cone2.position.y = 1.95;
+        cone2.castShadow = true;
+        cone2.receiveShadow = true;
+        tree.add(cone2);
+        
+        const cone3 = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.75, 5), foliageMat);
+        cone3.position.y = 2.5;
+        cone3.castShadow = true;
+        cone3.receiveShadow = true;
+        tree.add(cone3);
+        
+        tree.scale.set(scale, scale, scale);
+        return tree;
+    }
+
+    // Функция создания светящихся ледяных кристаллов
+    function createIceCrystal() {
+        const crystalGeo = new THREE.DodecahedronGeometry(0.4, 0);
+        const crystalMat = new THREE.MeshStandardMaterial({
+            color: 0x76dfff,
+            emissive: 0x0c3047,
+            roughness: 0.05,
+            metalness: 0.95,
+            transparent: true,
+            opacity: 0.85
+        });
+        const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+        crystal.castShadow = true;
+        return crystal;
+    }
+
+    // Генерируем сосновый бор вокруг горы на равнине
+    for (let i = 0; i < 24; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 35 + Math.random() * 45; // за пределами самой горы
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const scale = 0.75 + Math.random() * 0.95;
+        const tree = createPineTree(scale);
+        tree.position.set(x, -6.0, z); // Ставим ровно на плоскость diorama
+        tree.rotation.y = Math.random() * Math.PI;
+        tree.rotation.x = (Math.random() - 0.5) * 0.08;
+        tree.rotation.z = (Math.random() - 0.5) * 0.08;
+        decorationGroup.add(tree);
+    }
+
+    // Генерируем парящие кристаллы льда
+    for (let i = 0; i < 9; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 22 + Math.random() * 40;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const crystal = createIceCrystal();
+        const baseHeight = 0.5 + Math.random() * 0.9;
+        crystal.position.set(x, -6.0 + baseHeight, z);
+        
+        const scale = 0.7 + Math.random() * 0.8;
+        crystal.scale.set(scale, scale * 1.6, scale); // делаем вытянутыми
+        crystal.rotation.x = Math.random() * Math.PI;
+        crystal.rotation.y = Math.random() * Math.PI;
+        decorationGroup.add(crystal);
+        
+        crystals.push({
+            mesh: crystal,
+            baseY: -6.0 + baseHeight,
+            speed: 0.6 + Math.random() * 1.0,
+            offset: Math.random() * Math.PI * 2
+        });
+    }
+    scene.add(decorationGroup);
+
+    // === ЗВЁЗДЫ ===
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 1500;
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+        starPositions[i*3] = (Math.random() - 0.5) * 260;
+        starPositions[i*3+1] = (Math.random() - 0.5) * 120 + 30;
+        starPositions[i*3+2] = (Math.random() - 0.5) * 180 - 70;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.09, transparent: true, opacity: 0.9 }));
+    scene.add(stars);
+
+    // === МАРКЕРЫ-КАРАБИНЫ ===
+    const markers = [];
+    const carabinerColors = [0xcc4444, 0x44cc44, 0xccaa44, 0x4488cc, 0xcc44cc];
+
+    sortedProducts.forEach((product, index) => {
+        const pos = markerPositions[index];
+        const color = carabinerColors[index % carabinerColors.length];
+
+        const carabiner = createCarabiner(pos.x, pos.y, pos.z, color, 0.8);
+        carabiner.userData = { product: product };
+        scene.add(carabiner);
+
+        // Текстовая метка
+        const canvas = document.createElement('canvas');
+        canvas.width = 280;
+        canvas.height = 55;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#ffb347';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px "Montserrat"';
+        const shortName = product.name.length > 18 ? product.name.slice(0, 16) + '...' : product.name;
+        ctx.fillText(shortName, 10, 25);
+        ctx.fillStyle = '#ffb347';
+        ctx.font = 'bold 16px "Montserrat"';
+        ctx.fillText(`${parseInt(product.price).toLocaleString()} ₽`, 10, 50);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.scale.set(1.6, 0.45, 1);
+        sprite.position.set(pos.x + 0.9, pos.y + 0.7, pos.z);
+        scene.add(sprite);
+
+        markers.push({ marker: carabiner, product: product, sprite: sprite, originalY: pos.y });
+    });
+
+    // === ОБРАБОТЧИК КЛИКОВ ===
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let currentProduct = null;
+
+    window.addEventListener('click', (event) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const clickable = markers.map(m => m.marker);
+        const hits = raycaster.intersectObjects(clickable, true);
+
+        if (hits.length > 0) {
+            let hitMarker = null;
+            for (const hit of hits) {
+                hitMarker = markers.find(m => m.marker === hit.object.parent);
+                if (hitMarker) break;
+            }
+
+            if (hitMarker && hitMarker.product) {
+                currentProduct = hitMarker.product;
+                document.getElementById('productName').textContent = currentProduct.name;
+                document.getElementById('productPrice').innerHTML = `${parseInt(currentProduct.price).toLocaleString()} ₽`;
+                document.getElementById('productDesc').textContent = currentProduct.description || 'Профессиональное снаряжение для альпинизма';
+                document.getElementById('productPanel').classList.add('show');
+            }
+        }
+    });
+
+    // === КНОПКА "В КОРЗИНУ" С CSRF-ТОКЕНОМ ===
+    document.getElementById('buyButton').onclick = () => {
+        if (currentProduct) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/cart/add/${currentProduct.id}/`;
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            const qty = document.createElement('input');
+            qty.type = 'hidden';
+            qty.name = 'quantity';
+            qty.value = '1';
+            form.appendChild(qty);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    };
+
+    document.getElementById('closePanel').onclick = () => {
+        document.getElementById('productPanel').classList.remove('show');
+    };
+
+    // === АНИМАЦИЯ ===
+    let time = 0;
+    function animateCarabiners() {
+        time += 0.03;
+        markers.forEach((marker, i) => {
+            if (marker.marker) {
+                marker.marker.rotation.y = Math.sin(time * 1.5 + i) * 0.2;
+                marker.marker.rotation.z = Math.sin(time * 2 + i) * 0.1;
+            }
+            if (marker.sprite) {
+                marker.sprite.position.y = marker.originalY + 0.7 + Math.sin(time * 2.5 + i) * 0.05;
+            }
+        });
+    }
+
+    // Анимация вращения звезд и парения кристаллов льда
+    function animateEnvironment() {
+        if (stars) {
+            stars.rotation.y += 0.00015;
+            stars.rotation.x += 0.00004;
+        }
+        crystals.forEach(c => {
+            c.mesh.position.y = c.baseY + Math.sin(time * c.speed + c.offset) * 0.18;
+            c.mesh.rotation.y += 0.008;
+            c.mesh.rotation.z += 0.004;
+        });
+    }
+
+    // Функция: сначала сканируем всю поверхность горы, затем распределяем маркеры по найденным точкам
+    function snapMarkersToMountain(mountainMesh) {
+        mountainMesh.updateMatrixWorld(true);
+
+        const raycaster = new THREE.Raycaster();
+        const down = new THREE.Vector3(0, -1, 0);
+
+        // === ШАГ 1: Плотное сканирование поверхности горы ===
+        // Стреляем лучами вниз по плотной сетке 60×60 точек (3600 лучей)
+        // и собираем все реальные точки поверхности горы
+        const surfacePoints = [];
+        const scanStep = 1.2;      // расстояние между лучами в единицах сцены
+        const scanRadius = 26;     // радиус зоны сканирования
+
+        for (let sx = -scanRadius; sx <= scanRadius; sx += scanStep) {
+            for (let sz = -scanRadius; sz <= scanRadius; sz += scanStep) {
+                // Пропускаем точки за пределами круга горы
+                if (sx * sx + sz * sz > scanRadius * scanRadius) continue;
+
+                raycaster.set(new THREE.Vector3(sx, 150, sz), down);
+                const hits = raycaster.intersectObject(mountainMesh, true);
+
+                if (hits.length > 0) {
+                    const p = hits[0].point;
+                    // Берём только точки выше заснеженной равнины (y > -5)
+                    if (p.y > -5.0) {
+                        surfacePoints.push(p.clone());
+                    }
+                }
+            }
+        }
+
+        console.log(`🏔️ Найдено ${surfacePoints.length} точек на поверхности горы`);
+
+        if (surfacePoints.length === 0) {
+            console.error('❌ Не удалось найти поверхность горы — проверьте модель');
+            return;
+        }
+
+        // === ШАГ 2: Распределяем маркеры равномерно по найденным точкам ===
+        // Сортируем по высоте (от вершины вниз по склону)
+        surfacePoints.sort((a, b) => b.y - a.y);
+
+        // Равномерно выбираем N точек из всего массива найденных
+        const n = markers.length;
+        markers.forEach((markerObj, i) => {
+            // Индекс с равномерным шагом: от вершины к подножию
+            const idx = Math.round(i * (surfacePoints.length - 1) / Math.max(n - 1, 1));
+            const pt = surfacePoints[idx];
+
+            const targetY = pt.y + 0.72; // Карабин ставим прямо на склон
+
+            markerObj.marker.position.set(pt.x, targetY, pt.z);
+            markerObj.originalY = targetY;
+
+            if (markerObj.sprite) {
+                markerObj.sprite.position.set(pt.x + 0.9, targetY + 1.2, pt.z);
+            }
+
+            console.log(`📍 "${markerObj.product.name}" → (${pt.x.toFixed(1)}, ${targetY.toFixed(1)}, ${pt.z.toFixed(1)})`);
+        });
+
+        console.log('✅ Все карабины расставлены по поверхности горы!');
+    }
+
+    // === ЗАГРУЗКА МОДЕЛИ ГОРЫ ===
+    const loader = new GLTFLoader();
+    const modelPath = '/static/models/mountain.glb';
+
+    loader.load(modelPath,
+        (gltf) => {
+            console.log('✅ Модель горы загружена!');
+            const mountain = gltf.scene;
+            mountain.scale.set(50, 50, 50);
+            mountain.position.y = -1;
+            
+            // Включаем поддержку теней на всех подобъектах горы
+            mountain.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                    // Оптимизация материала под лунное освещение
+                    if (node.material) {
+                        node.material.roughness = 0.85;
+                        node.material.metalness = 0.05;
+                    }
+                }
+            });
+            
+            scene.add(mountain);
+            
+            // Обновляем статус
+            setLoadingStatus('Привязка маркеров к горе...', 85);
+            
+            // Автоматическое примыкание маркеров к рельефу горы
+            snapMarkersToMountain(mountain);
+            
+            setLoadingStatus('Финальная подготовка...', 95);
+            
+            // Запускаем первый рендер-кадр, чтобы сцена была готова до показа
+            renderer.render(scene, camera);
+            
+            setLoadingStatus('Готово!', 100);
+            
+            // Плавно убираем экран загрузки
+            setTimeout(() => {
+                const screen = document.getElementById('loadingScreen');
+                screen.classList.add('fade-out');
+                document.getElementById('instruction').style.display = '';
+                
+                // Удаляем из DOM после завершения анимации
+                setTimeout(() => screen.remove(), 900);
+                
+                // Запускаем рендер-цикл только после полной загрузки
+                animate();
+            }, 400);
+        },
+        (xhr) => {
+            if (xhr.total > 0) {
+                const percent = Math.floor((xhr.loaded / xhr.total) * 100);
+                setLoadingStatus(`Загрузка модели горы... ${percent}%`, 10 + percent * 0.7);
+            }
+        },
+        (error) => {
+            console.error('❌ Ошибка:', error);
+            setLoadingStatus('Ошибка загрузки модели', 0);
+            document.getElementById('loadingStatus').style.color = '#ff4444';
+        }
+    );
+
+    // === Управление экраном загрузки ===
+    function setLoadingStatus(text, percent) {
+        const status = document.getElementById('loadingStatus');
+        const fill = document.getElementById('progressFill');
+        if (status) status.textContent = text;
+        if (fill) fill.style.width = Math.min(100, percent) + '%';
+    }
+    setLoadingStatus('Генерация окружения...', 10);
+
+    // === ГЛАВНЫЙ ЦИКЛ РЕНДЕРА ===
+    function animate() {
+        requestAnimationFrame(animate);
+        animateCarabiners();
+        animateEnvironment();
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+{% endblock %}

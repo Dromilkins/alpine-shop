@@ -1,0 +1,208 @@
+:root {
+    --white: #ffffff;
+    --black: #111111;
+    --gray: #666666;
+    --light-gray: #f5f5f5;
+    --border: #e8e8e8;
+    --gold: #c9a03d;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--white);
+    color: var(--black);
+}
+
+/* Кнопки */
+.btn-dark-custom {
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.btn-dark-custom:hover {
+    opacity: 0.8;
+    color: var(--white);
+}
+
+.btn-outline-custom {
+    background: transparent;
+    border: 1px solid var(--black);
+    color: var(--black);
+    transition: all 0.2s;
+}
+
+.btn-outline-custom:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* Карточки */
+.product-card {
+    text-decoration: none;
+    color: var(--black);
+    transition: transform 0.3s;
+    display: block;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-card img {
+    width: 100%;
+    background: var(--light-gray);
+    transition: opacity 0.3s;
+}
+
+.product-card:hover img {
+    opacity: 0.9;
+}
+
+/* Фильтры */
+.filter-sidebar {
+    background: var(--white);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+}
+
+.filter-title {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+/* Формы */
+.form-control, .form-select {
+    border-radius: 0;
+    border-color: var(--border);
+    font-size: 0.9rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--black);
+    box-shadow: none;
+}
+
+/* Адаптация */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.8rem 0;
+    }
+
+    main {
+        margin-top: 70px !important;
+    }
+
+    .btn-dark-custom, .btn-outline-custom {
+        padding: 5px 12px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Toast уведомления */
+.toast-container {
+    top: 85px !important;
+}
+
+.toast {
+    min-width: 280px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02);
+    backdrop-filter: blur(10px);
+}
+
+.toast.text-bg-success {
+    background: #10b981 !important;
+    color: white;
+    border: none;
+}
+
+.toast.text-bg-danger {
+    background: #ef4444 !important;
+    color: white;
+    border: none;
+}
+
+.toast.text-bg-warning {
+    background: #f59e0b !important;
+    color: white;
+    border: none;
+}
+
+.toast.text-bg-info {
+    background: #3b82f6 !important;
+    color: white;
+    border: none;
+}
+
+.toast .toast-body {
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.toast .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.7;
+}
+
+.toast .btn-close-white:hover {
+    opacity: 1;
+}
+
+
+/* Анимация появления уведомлений */
+.toast {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.hiding {
+    animation: fadeOut 0.2s ease-out;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+
+/* Минималистичные иконки статусов */
+.status-icon {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+.status-icon.available {
+    background-color: #111;
+}
+.status-icon.unavailable {
+    background-color: #ccc;
+}
+.status-icon.paid {
+    background-color: #10b981;
+}
+.status-icon.pending {
+    background-color: #f59e0b;
+}

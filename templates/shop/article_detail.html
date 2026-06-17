@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ article.title }} — Горный журнал ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Хлебные крошки -->
+            <nav class="mb-4">
+                <ol class="breadcrumb bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'shop:article_list' %}" class="text-decoration-none text-muted">Горный журнал</a></li>
+                    <li class="breadcrumb-item active text-dark">{{ article.title|truncatechars:40 }}</li>
+                </ol>
+            </nav>
+
+            <!-- Дата и теги -->
+            <div class="mb-3">
+                <span class="small text-muted">{{ article.created_at|date:"d M Y" }}</span>
+            </div>
+
+            <!-- Заголовок -->
+            <h1 class="display-5 fw-bold mb-4">{{ article.title }}</h1>
+
+            <!-- Автор и время чтения -->
+            <div class="d-flex gap-4 text-muted small mb-4 pb-2 border-bottom">
+                <span>✍️ {{ article.author }}</span>
+                <span>📖 5 мин чтения</span>
+            </div>
+
+            <!-- Изображение -->
+            {% if article.image %}
+            <div class="mb-5">
+                <img src="{{ article.image.url }}" class="img-fluid w-100" style="max-height: 450px; object-fit: cover;" alt="{{ article.title }}">
+            </div>
+            {% else %}
+            <div class="mb-5 bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                <span class="display-1 text-muted">🏔️</span>
+            </div>
+            {% endif %}
+
+            <!-- Содержание статьи (безопасно, без HTML-тегов) -->
+            <div class="article-content fs-5 lh-lg">
+                {{ article.content|linebreaks|safe }}
+            </div>
+
+            <!-- Теги -->
+            <div class="mt-5 pt-4 border-top">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="small text-muted me-2">Теги:</span>
+                    <a href="#" class="badge bg-light text-dark text-decoration-none px-3 py-2 rounded-0">Снаряжение</a>
+                    <a href="#" class="badge bg-light text-dark text-decoration-none px-3 py-2 rounded-0">Обзоры</a>
+                    <a href="#" class="badge bg-light text-dark text-decoration-none px-3 py-2 rounded-0">Советы</a>
+                </div>
+            </div>
+
+            <!-- Кнопки навигации -->
+            <div class="d-flex justify-content-between mt-5 pt-4 border-top">
+                <a href="{% url 'shop:article_list' %}" class="btn btn-outline-dark rounded-0 px-4 py-2">← Все статьи</a>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-0 px-4 py-2">Перейти в каталог →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .article-content {
+        color: #333;
+        line-height: 1.8;
+    }
+    .article-content p {
+        margin-bottom: 1.5rem;
+    }
+    .article-content h2 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #eee;
+    }
+    .article-content h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        color: #222;
+    }
+    .article-content ul, .article-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+    }
+    .article-content li {
+        margin-bottom: 0.5rem;
+    }
+    .article-content blockquote {
+        border-left: 4px solid #c9a03d;
+        padding-left: 1.5rem;
+        font-style: italic;
+        margin: 1.5rem 0;
+        color: #666;
+    }
+    .article-content hr {
+        margin: 2rem 0;
+    }
+    .article-content strong {
+        color: #000;
+    }
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        color: #aaa;
+    }
+</style>
+{% endblock %}

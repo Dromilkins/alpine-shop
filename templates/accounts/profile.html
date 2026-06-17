@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Профиль — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold display-5">Профиль</h1>
+                <div>
+                    <a href="{% url 'accounts:orders' %}" class="btn btn-outline-dark rounded-0">Мои заказы →</a>
+                    {% if user.is_superuser %}
+                    <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-dark rounded-0 ms-2">Админ-панель</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase text-muted">Имя пользователя</label>
+                                {{ u_form.username }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase text-muted">Email</label>
+                                {{ u_form.email }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase text-muted">Телефон</label>
+                                {{ p_form.phone }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small text-uppercase text-muted">Аватар</label>
+                                {{ p_form.avatar }}
+                                {% if user.profile.avatar %}
+                                <div class="mt-2">
+                                    <img src="{{ user.profile.avatar.url }}" style="width: 60px; height: 60px; object-fit: cover;">
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-4">
+                                <label class="form-label small text-uppercase text-muted">Адрес доставки</label>
+                                {{ p_form.address }}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark rounded-0 px-4 py-2">Сохранить изменения</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

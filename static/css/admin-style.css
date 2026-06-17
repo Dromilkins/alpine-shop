@@ -1,0 +1,40 @@
+/* Минималистичные иконки статусов */
+.status-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+.status-icon.available {
+    background-color: #10b981;
+}
+.status-icon.unavailable {
+    background-color: #ef4444;
+}
+.status-icon.paid {
+    background-color: #10b981;
+}
+.status-icon.pending {
+    background-color: #f59e0b;
+}
+.status-icon.published {
+    background-color: #111;
+}
+.status-icon.draft {
+    background-color: #cbd5e1;
+}
+
+/* SVG иконки для действий */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 0;
+    transition: all 0.2s;
+}
+.icon-btn:hover {
+    background: #f1f1f1;
+}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Мои отзывы — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold display-5">Мои отзывы</h1>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark rounded-0">← Назад в профиль</a>
+    </div>
+    
+    {% if reviews %}
+    <div class="row g-4">
+        {% for review in reviews %}
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="fw-bold mb-1">
+                                <a href="{{ review.product.get_absolute_url }}" class="text-dark text-decoration-none">
+                                    {{ review.product.name }}
+                                </a>
+                            </h5>
+                            <div class="mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                    <span style="color: #f59e0b;">★</span>
+                                    {% else %}
+                                    <span style="color: #d1d5db;">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted mb-0">{{ review.text }}</p>
+                        </div>
+                        <div class="text-end small text-muted">
+                            {{ review.created_at|date:"d.m.Y H:i" }}
+                            {% if review.created_at != review.updated_at %}
+                            <br><span class="text-muted">(изменён)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="display-1 mb-3">✏️</div>
+        <h3 class="fw-bold mb-2">У вас пока нет отзывов</h3>
+        <p class="text-muted mb-4">Оставьте отзыв на товары, которые вы приобрели</p>
+        <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-0 px-4">Перейти в каталог →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

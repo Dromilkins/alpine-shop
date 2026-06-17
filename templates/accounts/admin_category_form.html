@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h1 class="fw-bold h3 mb-4">{{ title }}</h1>
+            
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase text-muted">Название категории</label>
+                            {{ form.name }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase text-muted">Slug (URL)</label>
+                            {{ form.slug }}
+                            <div class="form-text small text-muted">Будет автоматически сгенерирован из названия</div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-dark rounded-0 px-4">Сохранить</button>
+                            <a href="{% url 'accounts:admin_categories' %}" class="btn btn-outline-dark rounded-0">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

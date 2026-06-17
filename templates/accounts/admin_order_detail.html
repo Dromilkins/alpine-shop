@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Заказ #{{ order.id }} — Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold h3 mb-0">Заказ #{{ order.id }}</h1>
+                <a href="{% url 'accounts:admin_orders' %}" class="btn btn-outline-dark rounded-0">← Все заказы</a>
+            </div>
+
+            <!-- Информация о заказе -->
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3"><strong>Покупатель:</strong> {{ order.first_name }} {{ order.last_name }}</div>
+                            <div class="mb-3"><strong>Телефон:</strong> {{ order.phone }}</div>
+                            <div class="mb-3"><strong>Email:</strong> {{ order.email }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3"><strong>Дата заказа:</strong> {{ order.created|date:"d.m.Y H:i" }}</div>
+                            <div class="mb-3"><strong>Адрес доставки:</strong> {{ order.address }}</div>
+                            <div class="mb-3"><strong>Способ доставки:</strong> {{ order.get_delivery_method_display }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Товары в заказе -->
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">Товары в заказе</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="bg-light">
+                            <tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th class="text-end">Сумма</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.price }} ₽</td>
+                                <td>{{ item.quantity }}</td>
+                                <td class="text-end">{{ item.get_cost }} ₽</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr><th colspan="3" class="text-end fw-bold">Итого:</th><th class="text-end fw-bold">{{ order.get_total_cost }} ₽</th></tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-bold mb-0">Изменить статус</h5>
+    </div>
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted">Статус заказа</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted">Статус оплаты</label>
+                        {{ form.payment_status }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3 form-check mt-4 pt-2">
+                        {{ form.is_paid }}
+                        <label class="form-check-label fw-bold"> Оплачен</label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-dark rounded-0 mt-2">Сохранить изменения</button>
+        </form>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

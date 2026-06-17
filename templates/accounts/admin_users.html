@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Пользователи — Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold h3 mb-0">Пользователи</h1>
+    </div>
+    
+    <div class="card border-0 shadow-sm rounded-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3">Email</th>
+                        <th class="py-3">Дата</th>
+                        <th class="py-3">Роль</th>
+                        <th class="py-3">Заказов</th>
+                        <th class="py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr class="border-bottom">
+                        <td class="py-3 px-4 align-middle">#{{ u.id }}</td>
+                        <td class="py-3 align-middle">{{ u.email|default:"—" }}</td>
+                        <td class="py-3 align-middle">{{ u.date_joined|date:"d.m.Y" }}</td>
+                        <td class="py-3 align-middle">
+                            {% if u.is_superuser %}
+                             Администратор
+                            {% elif u.is_staff %}
+                             Персонал
+                            {% else %}
+                             Пользователь
+                            {% endif %}
+                        </td>
+                        <td class="py-3 align-middle">{{ u.orders.count }}</td>
+                        <td class="py-3 align-middle">
+                            <!-- Кнопка сброса пароля -->
+                            <button class="btn btn-sm btn-outline-dark rounded-0 me-1" data-bs-toggle="modal" data-bs-target="#resetModal{{ u.id }}">
+                                 Сброс пароля
+                            </button>
+
+                            <!-- Кнопка удаления (только для обычных пользователей) -->
+                            {% if not u.is_superuser %}
+                            <button class="btn btn-sm btn-outline-danger rounded-0" data-bs-toggle="modal" data-bs-target="#deleteModal{{ u.id }}">
+                                 Удалить
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Модальное окно сброса пароля -->
+                    <div class="modal fade" id="resetModal{{ u.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-0">
+                                <form method="post" action="{% url 'accounts:admin_user_reset_password' u.id %}" onsubmit="return checkPassword(this)">
+                                    {% csrf_token %}
+                                    <div class="modal-header border-0 pt-4 px-4">
+                                        <h5 class="fw-bold">Сброс пароля</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body px-4">
+                                        <p>Пользователь: <strong>{{ u.username }}</strong></p>
+                                        <div class="mb-3">
+                                            <label class="form-label small text-muted">Новый пароль</label>
+                                            <input type="password" name="new_password" class="form-control rounded-0" required>
+                                            <div class="form-text small text-muted">Минимум 8 символов</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small text-muted">Подтверждение пароля</label>
+                                            <input type="password" name="confirm_password" class="form-control rounded-0" required>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 pb-4 px-4">
+                                        <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">Отмена</button>
+                                        <button type="submit" class="btn btn-dark rounded-0">Сохранить</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ УДАЛЕНИЯ -->
+                    {% if not u.is_superuser %}
+                    <div class="modal fade" id="deleteModal{{ u.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-0">
+                                <div class="modal-header border-0 pt-4 px-4">
+                                    <h5 class="fw-bold text-danger">Удаление пользователя</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body px-4">
+                                    <p>Вы уверены, что хотите удалить пользователя <strong>{{ u.username }}</strong>?</p>
+                                    <p class="small text-muted">Это действие невозможно отменить. Все заказы пользователя также будут удалены.</p>
+                                </div>
+                                <div class="modal-footer border-0 pb-4 px-4">
+                                    <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">Отмена</button>
+                                    <a href="{% url 'accounts:admin_user_delete' u.id %}" class="btn btn-danger rounded-0">🗑️ Удалить</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkPassword(form) {
+    var password = form.querySelector('input[name="new_password"]').value;
+    var confirm = form.querySelector('input[name="confirm_password"]').value;
+    
+    if (password.length < 8) {
+        alert('Пароль должен содержать минимум 8 символов!');
+        return false;
+    }
+    
+    if (password !== confirm) {
+        alert('Пароли не совпадают!');
+        return false;
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}

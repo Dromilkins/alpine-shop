@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="fw-bold h3 mb-4">{{ title }}</h1>
+            
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label small text-uppercase text-muted">Заголовок</label>
+                                    {{ form.title }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label small text-uppercase text-muted">Slug (URL)</label>
+                                    {{ form.slug }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase text-muted">Краткое описание</label>
+                            {{ form.excerpt }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-uppercase text-muted">Полный текст</label>
+                            {{ form.content }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label small text-uppercase text-muted">Изображение</label>
+                                    {{ form.image }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label small text-uppercase text-muted">Автор</label>
+                                    {{ form.author }}
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3 form-check mt-4 pt-2">
+                                    {{ form.is_published }}
+                                    <label class="form-check-label">Опубликована</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-dark rounded-0 px-4">Сохранить</button>
+                            <a href="{% url 'accounts:admin_articles' %}" class="btn btn-outline-dark rounded-0">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ALPGEAR — Снаряжение для альпинизма{% endblock %}
+
+{% block content %}
+<style>
+    .hero-image {
+        background-image: url('https://images.unsplash.com/photo-1551632811-561732d1e306?w=1600');
+        background-size: cover;
+        background-position: center 30%;
+        height: 90vh;
+        position: relative;
+    }
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.2);
+    }
+    .collection-card {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .collection-card img {
+        transition: transform 0.6s ease;
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+    }
+    .collection-card:hover img {
+        transform: scale(1.03);
+    }
+    .collection-label {
+        position: absolute;
+        bottom: 30px;
+        left: 30px;
+        color: white;
+        z-index: 2;
+    }
+    .instagram-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px;
+    }
+    .instagram-grid div {
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+    .instagram-grid img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+    .instagram-grid img:hover {
+        transform: scale(1.05);
+    }
+    @media (max-width: 768px) {
+        .instagram-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .collection-card img {
+            height: 300px;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="hero-section position-relative" style="min-height: 90vh; background: #0a0a0a;">
+    <!-- Фоновое изображение -->
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 0;">
+        <img src="{% static 'images/hero-bg.jpg' %}"
+             alt="Альпинизм"
+             class="w-100 h-100"
+             style="object-fit: cover; object-position: center 30%;">
+        <div class="position-absolute top-0 start-0 w-100 h-100"
+             style="background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);"></div>
+    </div>
+
+    <!-- Контент -->
+    <div class="container position-relative z-1" style="z-index: 2;">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-7 text-white">
+                <p class="small mb-3" style="letter-spacing: 3px;">ДОСТУПНА ПОКУПКА С ОТСРОЧКОЙ ПЛАТЕЖА</p>
+                <h1 class="display-1 fw-bold mb-4" style="letter-spacing: -3px;">СНАРЯЖЕНИЕ<br>ДЛЯ АЛЬПИНИЗМА</h1>
+                <p class="lead mb-5 text-white-50">Всё, что нужно в горах и не только, разработано и проверено лучшими в
+                    мире.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'shop:product_list' %}" class="btn px-5 py-3"
+                       style="background: white; color: black; font-weight: 600; border-radius: 0;">КУПИТЬ СЕЙЧАС →</a>
+                    <a href="{% url 'mountain_map' %}" class="btn btn-outline-light px-5 py-3"
+                       style="border-radius: 0;">3D ОБЗОР</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Категории -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <a href="{% url 'shop:product_list' %}" class="text-dark text-decoration-none">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border: 1px solid #e0e0e0; transition: all 0.3s;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            <line x1="2" y1="7" x2="2" y2="17"/>
+                            <line x1="22" y1="7" x2="22" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="small fw-bold text-uppercase tracking-wide">МУЖСКОЕ</div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <a href="{% url 'shop:product_list' %}" class="text-dark text-decoration-none">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border: 1px solid #e0e0e0; transition: all 0.3s;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M5 18v2h14v-2c0-2.8-2.2-5-5-5h-4c-2.8 0-5 2.2-5 5z"/>
+                        </svg>
+                    </div>
+                    <div class="small fw-bold text-uppercase tracking-wide">ЖЕНСКОЕ</div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <a href="{% url 'shop:product_list' %}" class="text-dark text-decoration-none">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border: 1px solid #e0e0e0; transition: all 0.3s;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <path d="M8 7h8M12 3v4M4 11h16M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            <circle cx="12" cy="15" r="2"/>
+                        </svg>
+                    </div>
+                    <div class="small fw-bold text-uppercase tracking-wide">СНАРЯЖЕНИЕ</div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <a href="#" class="text-dark text-decoration-none">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border: 1px solid #e0e0e0; transition: all 0.3s;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.03.03A10 10 0 0 0 12 17.66a10 10 0 0 0 6.37-2.63z"/>
+                        </svg>
+                    </div>
+                    <div class="small fw-bold text-uppercase tracking-wide">ОТКРЫТЬ</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Коллекции -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="collection-card">
+                    <img src="{% static 'images/rock-climbing.jpg' %}" alt="Rock Climbing">
+                    <div class="collection-label">
+                        <h3 class="fw-bold">СКАЛОЛАЗАНИЕ</h3>
+                        <p class="small">Верёвки, обвязки, карабины</p>
+                        <a href="{% url 'shop:product_list' %}" class="text-white text-decoration-none small">Смотреть
+                            →</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="collection-card">
+                    <img src="{% static 'images/ice-climbing1.jpg' %}" alt="Ice Climbing">
+                    <div class="collection-label">
+                        <h3 class="fw-bold">ЛЕДОЛАЗАНИЕ</h3>
+                        <p class="small">Ледорубы, кошки, ледобуры</p>
+                        <a href="{% url 'shop:product_list' %}" class="text-white text-decoration-none small">Смотреть
+                            →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Рекомендуемые товары -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold fs-2">Рекомендуемое</h2>
+            <a href="{% url 'shop:product_list' %}" class="text-dark text-decoration-none small">Смотреть все →</a>
+        </div>
+        <div class="row g-4">
+            {% for product in popular_products|slice:":4" %}
+            <div class="col-md-3">
+                <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                    <div class="bg-light" style="height: 320px; background: #f5f5f5;">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="w-100 h-100" style="object-fit: cover;"
+                             alt="{{ product.name }}">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <span class="display-1 text-muted">🏔️</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted mt-3">{{ product.category.name }}</div>
+                    <div class="fw-semibold">{{ product.name|truncatechars:40 }}</div>
+                    <div class="fw-bold mt-1">{{ product.price|floatformat:0 }} ₽</div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Бренд highlight -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{% static 'images/petzl-logo.png' %}" class="img-fluid mb-4" style="max-width: 120px;"
+                     alt="Petzl">
+                <h3 class="fw-bold">PETZL</h3>
+                <p class="text-muted">Французское качество с 1975 года. Мировой стандарт для вертикального мира.</p>
+                <a href="#" class="btn btn-outline-dark rounded-0 mt-2">УЗНАТЬ →</a>
+            </div>
+            <div class="col-md-6">
+                <img src="{% static 'images/petzl-equipment.jpg' %}" class="img-fluid"
+                     alt="Petzl equipment">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Хиты продаж -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold fs-2">Хиты продаж</h2>
+            <a href="{% url 'shop:product_list' %}" class="text-dark text-decoration-none small">Смотреть все →</a>
+        </div>
+        <div class="row g-4">
+            {% for product in popular_products|slice:"4:8" %}
+            <div class="col-md-3">
+                <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                    <div class="bg-light" style="height: 320px; background: #f5f5f5;">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="w-100 h-100" style="object-fit: cover;"
+                             alt="{{ product.name }}">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <span class="display-1 text-muted">🏔️</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted mt-3">{{ product.category.name }}</div>
+                    <div class="fw-semibold">{{ product.name|truncatechars:40 }}</div>
+                    <div class="fw-bold mt-1">{{ product.price|floatformat:0 }} ₽</div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Цитата -->
+<section class="py-5 bg-white">
+    <div class="container text-center py-5">
+        <p class="fs-2 fw-light mb-4" style="font-style: italic;">«Горы зовут — и я должен идти».</p>
+        <p class="small text-muted">— ДЖОН МЬЮР</p>
+    </div>
+</section>
+
+
+<!-- Почему выбирают нас -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="small text-muted" style="letter-spacing: 3px;">ПРЕИМУЩЕСТВА</span>
+            <h2 class="display-5 fw-bold mt-2">Почему выбирают нас</h2>
+            <p class="text-muted">Профессиональный подход к каждому клиенту</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3 text-center">
+                <div class="mb-3">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <h5 class="fw-bold">Оригинальная продукция</h5>
+                <p class="small text-muted">Только сертифицированные бренды</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-3">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <h5 class="fw-bold">Быстрая доставка</h5>
+                <p class="small text-muted">По всей России от 2 дней</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-3">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <path d="M20 12v10H4V12M2 5h20M12 5v17"/>
+                    </svg>
+                </div>
+                <h5 class="fw-bold">Гарантия качества</h5>
+                <p class="small text-muted">Возврат в течение 14 дней</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-3">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                </div>
+                <h5 class="fw-bold">Экспертная поддержка</h5>
+                <p class="small text-muted">Поможем с выбором снаряжения</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock %}

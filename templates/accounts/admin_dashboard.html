@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Админ-панель — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fw-bold h2 mb-0">Админ-панель</h1>
+                <p class="text-muted small mt-1">Управление магазином</p>
+            </div>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark rounded-0 px-3 py-2 small">← Мой профиль</a>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row g-3 mb-5">
+        <div class="col-sm-6 col-md-3">
+            <div class="border p-3 bg-white">
+                <div class="fs-1 fw-bold">{{ stats.total_orders }}</div>
+                <div class="small text-muted text-uppercase">Всего заказов</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="border p-3 bg-white">
+                <div class="fs-1 fw-bold">{{ stats.revenue|floatformat:0 }} ₽</div>
+                <div class="small text-muted text-uppercase">Общая выручка</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="border p-3 bg-white">
+                <div class="fs-1 fw-bold">{{ stats.total_users }}</div>
+                <div class="small text-muted text-uppercase">Пользователей</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="border p-3 bg-white">
+                <div class="fs-1 fw-bold">{{ stats.pending_orders }}</div>
+                <div class="small text-muted text-uppercase">Ожидают оплаты</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Левая колонка - Меню -->
+        <div class="col-md-3">
+            <div class="border bg-white">
+                <div class="border-bottom p-3 bg-light fw-semibold small text-uppercase text-muted">Управление</div>
+                <div>
+                    <a href="{% url 'accounts:admin_products' %}" class="d-flex justify-content-between align-items-center p-3 border-bottom text-decoration-none text-dark">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="me-2">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            Товары
+                        </span>
+                        <span class="text-muted">{{ stats.total_products }}</span>
+                    </a>
+                    <a href="{% url 'accounts:admin_categories' %}" class="d-flex justify-content-between align-items-center p-3 border-bottom text-decoration-none text-dark">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="me-2">
+                                <path d="M4 4h16v16H4z"/>
+                                <line x1="4" y1="8" x2="20" y2="8"/>
+                            </svg>
+                            Категории
+                        </span>
+                        <span class="text-muted">{{ stats.total_categories }}</span>
+                    </a>
+                    <a href="{% url 'accounts:admin_orders' %}" class="d-flex justify-content-between align-items-center p-3 border-bottom text-decoration-none text-dark">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="me-2">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            Заказы
+                        </span>
+                        <span class="text-muted">{{ stats.total_orders }}</span>
+                    </a>
+                    <a href="{% url 'accounts:admin_articles' %}" class="d-flex justify-content-between align-items-center p-3 border-bottom text-decoration-none text-dark">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="me-2">
+                                <path d="M4 4h16v16H4z"/>
+                                <line x1="8" y1="8" x2="16" y2="8"/>
+                                <line x1="8" y1="12" x2="16" y2="12"/>
+                                <line x1="8" y1="16" x2="12" y2="16"/>
+                            </svg>
+                            Статьи
+                        </span>
+                        <span class="text-muted">{{ stats.total_articles }}</span>
+                    </a>
+                    <a href="{% url 'accounts:admin_users' %}" class="d-flex justify-content-between align-items-center p-3 border-bottom text-decoration-none text-dark">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="me-2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Пользователи
+                        </span>
+                        <span class="text-muted">{{ stats.total_users }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка - Заказы -->
+        <div class="col-md-9">
+            <div class="border bg-white">
+                <div class="border-bottom p-3 bg-light fw-semibold small text-uppercase text-muted">Последние заказы</div>
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3 py-2 small text-muted">№</th>
+                                <th class="py-2 small text-muted">Покупатель</th>
+                                <th class="py-2 small text-muted">Сумма</th>
+                                <th class="py-2 small text-muted">Статус</th>
+                                <th class="pe-3 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr class="border-bottom">
+                                <td class="ps-3 py-2 fw-semibold">#{{ order.id }}</td>
+                                <td class="py-2">{{ order.first_name }} {{ order.last_name|truncatechars:15 }}</td>
+                                <td class="py-2">{{ order.get_total_cost|floatformat:0 }} ₽</td>
+                                <td class="py-2 text-muted small">
+                                    {{ order.get_status_display }}
+                                </td>
+                                <td class="pe-3 py-2 text-end">
+                                    <a href="{% url 'accounts:admin_order_detail' order.id %}" class="text-dark">→</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Заказов пока нет</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

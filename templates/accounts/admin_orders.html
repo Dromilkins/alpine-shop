@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Заказы — Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="fw-bold h3 mb-4">Заказы</h1>
+
+    <div class="card border-0 shadow-sm rounded-0">
+        <table class="table mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th>№</th>
+                    <th>Дата</th>
+                    <th>Покупатель</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>Оплата</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.created|date:"d.m.Y" }}</td>
+                    <td>{{ order.first_name }} {{ order.last_name }}</td>
+                    <td>{{ order.get_total_cost }} ₽</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>{% if order.is_paid %} Оплачен{% else %} Не оплачен{% endif %}</td>
+                    <td><a href="{% url 'accounts:admin_order_detail' order.id %}" class="btn btn-sm btn-outline-dark">Детали</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

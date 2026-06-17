@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Мои заказы — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold display-5">Мои заказы</h1>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark rounded-0">← Назад в профиль</a>
+            </div>
+            
+            {% if orders %}
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="py-3 px-4">№ заказа</th>
+                                    <th class="py-3">Дата</th>
+                                    <th class="py-3">Сумма</th>
+                                    <th class="py-3">Статус</th>
+                                    <th class="py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td class="py-3 px-4 fw-semibold">#{{ order.id }}</td>
+                                    <td class="py-3">{{ order.created|date:"d.m.Y" }}</td>
+                                    <td class="py-3">{{ order.get_total_cost|floatformat:0 }} ₽</td>
+                                    <td class="py-3">
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Ожидает оплаты</span>
+                                        {% elif order.status == 'new' %}
+                                        <span class="badge bg-info text-dark">Новый</span>
+                                        {% elif order.status == 'processing' %}
+                                        <span class="badge bg-primary">В обработке</span>
+                                        {% elif order.status == 'shipped' %}
+                                        <span class="badge bg-secondary">Отправлен</span>
+                                        {% elif order.status == 'delivered' %}
+                                        <span class="badge bg-success">Доставлен</span>
+                                        {% elif order.status == 'canceled' %}
+                                        <span class="badge bg-danger">Отменён</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3">
+                                        <a href="{% url 'accounts:order_detail' order.id %}" class="btn btn-sm btn-outline-dark rounded-0">Детали</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 mb-3">📦</div>
+                <h3 class="fw-bold mb-2">У вас пока нет заказов</h3>
+                <p class="text-muted mb-4">Начните покупки в нашем магазине</p>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-0 px-4 py-2">Перейти в каталог →</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Регистрация — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold display-5">Регистрация</h1>
+                <p class="text-muted">Создайте аккаунт</p>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-lg-5">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Имя пользователя</label>
+                            <input type="text" name="username" class="form-control form-control-lg rounded-3" required>
+                            <div class="form-text small text-muted">Обязательное поле. Не более 150 символов.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email" class="form-control form-control-lg rounded-3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Телефон</label>
+                            <input type="text" name="phone" class="form-control form-control-lg rounded-3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Пароль</label>
+                            <input type="password" name="password1" class="form-control form-control-lg rounded-3"
+                                   required>
+                            <div class="form-text small text-muted">Пароль должен содержать минимум 8 символов.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Подтверждение пароля</label>
+                            <input type="password" name="password2" class="form-control form-control-lg rounded-3"
+                                   required>
+                            <div class="form-text small text-muted">Введите тот же пароль, что и выше.</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-semibold">Зарегистрироваться
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted">Уже есть аккаунт? <a href="{% url 'accounts:login' %}"
+                                                                   class="text-dark fw-semibold">Войти</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Каталог — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Фильтр -->
+        <div class="col-lg-3">
+            <div class="filter-sidebar">
+                <h5 class="fw-bold mb-4">ФИЛЬТР</h5>
+
+                <!-- Форма фильтрации -->
+<form method="get" id="filter-form">
+    <!-- Умный поиск -->
+    <div class="mb-4">
+        <label class="filter-title">ПОИСК</label>
+        <input type="text" name="search" class="form-control form-control-sm rounded-0"
+               placeholder="Название, бренд..." value="{{ current_filters.search }}">
+    </div>
+
+    <!-- Цена -->
+    <div class="mb-4">
+        <label class="filter-title">ЦЕНА (₽)</label>
+        <div class="row g-2">
+            <div class="col-6"><input type="number" name="min_price" class="form-control form-control-sm rounded-0" placeholder="От"></div>
+            <div class="col-6"><input type="number" name="max_price" class="form-control form-control-sm rounded-0" placeholder="До"></div>
+        </div>
+    </div>
+
+    <!-- Вес -->
+    <div class="mb-4">
+        <label class="filter-title">ВЕС (Г)</label>
+        <div class="row g-2">
+            <div class="col-6"><input type="number" name="min_weight" class="form-control form-control-sm rounded-0" placeholder="Мин"></div>
+            <div class="col-6"><input type="number" name="max_weight" class="form-control form-control-sm rounded-0" placeholder="Макс"></div>
+        </div>
+    </div>
+
+    <!-- Материал -->
+    <div class="mb-4">
+        <label class="filter-title">МАТЕРИАЛ</label>
+        <select name="material" class="form-select form-select-sm rounded-0">
+            <option value="">Любой</option>
+            {% for m in materials %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Класс прочности -->
+    <div class="mb-4">
+        <label class="filter-title">КЛАСС ПРОЧНОСТИ</label>
+        <select name="strength_class" class="form-select form-select-sm rounded-0">
+            <option value="">Любой</option>
+            <option value="basic">Базовый</option>
+            <option value="intermediate">Средний</option>
+            <option value="professional">Профессиональный</option>
+            <option value="expert">Экспертный</option>
+        </select>
+    </div>
+
+    <!-- Тип застёжки -->
+    <div class="mb-4">
+        <label class="filter-title">ТИП ЗАСТЁЖКИ</label>
+        <select name="clasp_type" class="form-select form-select-sm rounded-0">
+            <option value="">Любой</option>
+            <option value="screw">Винтовая муфта</option>
+            <option value="auto">Автомуфта</option>
+            <option value="bayonet">Байонетная</option>
+            <option value="none">Без муфты</option>
+        </select>
+    </div>
+
+    <!-- Бренд -->
+    {% if brands %}
+    <div class="mb-4">
+        <label class="filter-title">БРЕНД</label>
+        <select name="brand" class="form-select form-select-sm rounded-0">
+            <option value="">Все</option>
+            {% for b in brands %}
+            <option value="{{ b }}">{{ b }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-dark w-100 py-2 rounded-0">ПРИМЕНИТЬ</button>
+    <a href="{% url 'shop:product_list' %}" class="btn btn-outline-dark w-100 mt-2 py-2 rounded-0">СБРОСИТЬ</a>
+</form>
+            </div>
+        </div>
+
+        <!-- Товары -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="fw-bold fs-2">Каталог</h1>
+                    <p class="text-muted small mt-1">{{ products|length }} товаров</p>
+                </div>
+                <div>
+                    <select name="sort" form="filter-form" class="form-select form-select-sm rounded-0" style="width: 200px;" onchange="this.form.submit()">
+                        <option value="">Сортировать ▼</option>
+                        <option value="price_asc" {% if current_filters.sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                        <option value="price_desc" {% if current_filters.sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                        <option value="name_asc" {% if current_filters.sort == 'name_asc' %}selected{% endif %}>Название: А-Я</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="product-card">
+                        <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+                            <div class="product-image-wrapper">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                                {% else %}
+                                <div class="product-image-placeholder">
+                                    <span class="display-3 text-muted">🏔️</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <div class="product-category">{{ product.category.name }}</div>
+                                <h3 class="product-title">{{ product.name|truncatechars:35 }}</h3>
+                                <div class="product-price">{{ product.price|floatformat:0 }} ₽</div>
+                                {% if product.brand %}
+                                <div class="product-brand">{{ product.brand }}</div>
+                                {% endif %}
+                            </div>
+                        </a>
+                        <form action="{% url 'cart:cart_add' product.id %}" method="post" class="mt-2 px-2 pb-3">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="override" value="True">
+                            <button type="submit" class="btn btn-sm btn-outline-dark w-100 rounded-0">
+                                В корзину
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Товары не найдены</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-sidebar {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        position: sticky;
+        top: 90px;
+    }
+    .filter-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+        display: block;
+        text-transform: uppercase;
+    }
+    .product-card {
+        background: white;
+        transition: transform 0.2s;
+        border: 1px solid #eee;
+    }
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    .product-image-wrapper {
+        background: #f5f5f5;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+    }
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .product-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+    }
+    .product-info {
+        padding: 1rem 0.5rem 0.5rem;
+        text-align: center;
+    }
+    .product-category {
+        font-size: 0.7rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    .product-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 0.5rem;
+    }
+    .product-price {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #111;
+    }
+    .product-brand {
+        font-size: 0.7rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Сравнение товаров — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="fw-bold mb-4">Сравнение товаров</h1>
+    
+    {% if products %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="bg-light">
+                <tr>
+                    <th style="min-width: 180px;">Характеристика</th>
+                    {% for product in products %}
+                    <th style="min-width: 250px;">
+                        {{ product.name }}
+                        <a href="{% url 'shop:remove_from_compare' product.id %}" class="float-end text-danger">×</a>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Изображение</th>
+                    {% for product in products %}
+                    <td>
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" style="max-height: 150px; max-width: 100%;">
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr><td>Цена</td>{% for p in products %}<td class="fw-bold">{{ p.price }} ₽</td>{% endfor %}</tr>
+                <tr><td>Бренд</td>{% for p in products %}<td>{{ p.brand|default:"—" }}</td>{% endfor %}</tr>
+                <tr><td>Вес (г)</td>{% for p in products %}<td>{{ p.weight|default:"—" }}</td>{% endfor %}</tr>
+                <tr><td>Материал</td>{% for p in products %}<td>{{ p.material|default:"—" }}</td>{% endfor %}</tr>
+                <tr><td>Класс прочности</td>{% for p in products %}<td>{{ p.get_strength_class_display|default:"—" }}</td>{% endfor %}</tr>
+                <tr><td>Тип застёжки</td>{% for p in products %}<td>{{ p.get_clasp_type_display|default:"—" }}</td>{% endfor %}</tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-4 d-flex gap-3">
+        <a href="{% url 'shop:product_list' %}" class="btn btn-outline-dark rounded-0">← Продолжить покупки</a>
+        <a href="{% url 'shop:remove_from_compare' products.0.id %}" class="btn btn-danger rounded-0">Очистить все</a>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <p class="text-muted">Нет товаров для сравнения</p>
+        <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-0">Перейти в каталог</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

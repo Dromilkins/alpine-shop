@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Корзина — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <h1 class="fw-bold mb-4 display-5">Корзина</h1>
+
+            {% if cart|length > 0 %}
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-body p-0">
+                    {% for item in cart %}
+                    <div class="row align-items-center g-0 p-4 border-bottom">
+                        <!-- Товар: изображение + название -->
+                        <div class="col-md-5">
+                            <div class="d-flex gap-3 align-items-center">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" class="rounded-0"
+                                     style="width: 70px; height: 70px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light rounded-0 d-flex align-items-center justify-content-center"
+                                     style="width: 70px; height: 70px;">
+                                    <span class="fs-2">🏔️</span>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ item.product.name }}</h6>
+                                    <p class="small text-muted mb-0">{{ item.product.category.name }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Цена -->
+                        <div class="col-md-2">
+                            <div class="fw-semibold">{{ item.price|floatformat:0 }} ₽</div>
+                        </div>
+
+
+
+                        <!-- Количество + кнопка обновить -->
+                      <div class="col-md-3">
+    <form action="{% url 'cart:cart_add' item.product.id %}" method="post" class="d-flex gap-2 align-items-center">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+
+        <!-- Ручное создание select вместо формы -->
+    <select name="quantity" class="form-select form-select-sm rounded-0" style="width: 80px;">
+    {% with max_qty=item.product.stock %}
+        {% if max_qty > 0 %}
+            {% for i in ''|ljust:max_qty %}
+                <option value="{{ forloop.counter }}" {% if item.quantity == forloop.counter %}selected{% endif %}>
+                    {{ forloop.counter }}
+                </option>
+            {% endfor %}
+        {% else %}
+            {% for i in ''|ljust:"20" %}
+                <option value="{{ forloop.counter }}" {% if item.quantity == forloop.counter %}selected{% endif %}>
+                    {{ forloop.counter }}
+                </option>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</select>
+
+        <input type="hidden" name="override" value="True">
+        <button type="submit" class="btn btn-sm btn-outline-dark rounded-0 px-3">Обновить</button>
+    </form>
+    <small class="text-muted d-block mt-1">Доступно: {{ item.product.stock }} шт.</small>
+</div>
+
+                        <!-- Сумма за позицию -->
+                        <div class="col-md-1">
+                            <div class="fw-bold">{{ item.total_price|floatformat:0 }} ₽</div>
+                        </div>
+
+                        <!-- Удалить -->
+                        <div class="col-md-1 text-end">
+                            <form action="{% url 'cart:cart_remove' item.product.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-0">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="1.5">
+                                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Блок промокода -->
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <h6 class="fw-bold mb-1">Есть промокод?</h6>
+                            <p class="small text-muted mb-0">Введите код для получения скидки 10%</p>
+                        </div>
+                        <div class="col-md-7">
+                            <form method="post" action="{% url 'cart:apply_discount' %}" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <input type="text" name="discount_code" class="form-control rounded-0"
+                                       placeholder="Промокод">
+                                <button type="submit" class="btn btn-dark rounded-0 px-4">Применить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Итоговая сумма и кнопки -->
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'shop:product_list' %}" class="btn btn-outline-dark rounded-0 px-4 py-2">← Продолжить
+                    покупки</a>
+                <div class="text-end">
+                    {% if request.session.discount_applied %}
+                    <div class="mb-2">
+                        <span class="text-muted">Подытог:</span>
+                        <span class="fw-semibold ms-2">{{ cart.get_total_price|floatformat:0 }} ₽</span>
+                    </div>
+                    <div class="mb-2 text-success">
+                        <span class="text-muted">Скидка 10%:</span>
+                        <span class="fw-semibold ms-2">-{{ discount_amount|floatformat:0 }} ₽</span>
+                    </div>
+                    <div class="fs-5 fw-bold mb-3">
+                        Итого: <span class="text-dark">{{ final_total|floatformat:0 }} ₽</span>
+                    </div>
+                    {% else %}
+                    <div class="fs-5 fw-bold mb-3">
+                        Итого: <span class="text-dark">{{ cart.get_total_price|floatformat:0 }} ₽</span>
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'orders:order_create' %}" class="btn btn-dark rounded-0 px-5 py-2 fw-semibold">Оформить
+                        заказ →</a>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="text-center py-5">
+                <div class="display-1 mb-3">🛒</div>
+                <h3 class="fw-bold mb-2">Корзина пуста</h3>
+                <p class="text-muted mb-4">Добавьте товары в корзину, чтобы продолжить.</p>
+                <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-0 px-4 py-2">Перейти в каталог →</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

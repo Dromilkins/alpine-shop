@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Горный журнал — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Горный журнал</h1>
+        <p class="text-muted fs-5">Советы, обзоры и истории из мира альпинизма</p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Основные статьи -->
+        <div class="col-lg-8">
+            {% for article in articles %}
+            <article class="mb-5 pb-4 border-bottom">
+                <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
+                    <div class="row g-4">
+                        {% if article.image %}
+                        <div class="col-md-5">
+                            <img src="{{ article.image.url }}" class="img-fluid w-100" style="height: 200px; object-fit: cover;" alt="{{ article.title }}">
+                        </div>
+                        <div class="col-md-7">
+                    {% else %}
+                        <div class="col-12">
+                    {% endif %}
+                            <div class="small text-muted mb-2">{{ article.created_at|date:"d M Y" }}</div>
+                            <h2 class="h3 fw-bold mb-3">{{ article.title }}</h2>
+                            <p class="text-muted">{{ article.excerpt|truncatechars:150 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="small text-muted">✍️ {{ article.author }}</span>
+                                <span class="btn btn-outline-dark rounded-0 px-4 py-2">Читать →</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </article>
+            {% empty %}
+            <div class="text-center py-5">
+                <div class="display-1 mb-3">🏔️</div>
+                <h3 class="fw-bold mb-2">Статей пока нет</h3>
+                <p class="text-muted">Скоро здесь появятся полезные материалы</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Боковая панель (кликабельные темы) -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 90px;">
+                <!-- О блоге -->
+                <div class="mb-4 p-4" style="background: #f8f9fa;">
+                    <h5 class="fw-bold mb-3">О блоге</h5>
+                    <p class="small text-muted mb-0">Рассказываем о снаряжении, делимся опытом восхождений и даём полезные советы для альпинистов любого уровня.</p>
+                </div>
+
+                <!-- Популярные теги (кликабельные) -->
+                <div class="mb-4 p-4" style="background: #f8f9fa;">
+                    <h5 class="fw-bold mb-3">Темы</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'shop:product_list' %}?search=снаряжение" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Снаряжение</a>
+                        <a href="{% url 'shop:product_list' %}?search=обзор" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Обзоры</a>
+                        <a href="{% url 'shop:product_list' %}?search=советы" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Советы</a>
+                        <a href="{% url 'shop:product_list' %}?search=восхождение" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Восхождения</a>
+                        <a href="{% url 'shop:product_list' %}?search=безопасность" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Безопасность</a>
+                        <a href="{% url 'shop:product_list' %}?search=экипировка" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Экипировка</a>
+                        <a href="{% url 'shop:product_list' %}?search=ледоруб" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Ледорубы</a>
+                        <a href="{% url 'shop:product_list' %}?search=карабин" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Карабины</a>
+                        <a href="{% url 'shop:product_list' %}?search=обвязка" class="badge bg-dark text-white text-decoration-none px-3 py-2 rounded-0">Обвязки</a>
+                    </div>
+                </div>
+
+                <!-- Подписка -->
+                <div class="p-4" style="background: #f8f9fa;">
+                    <h5 class="fw-bold mb-3">Подписка</h5>
+                    <p class="small text-muted">Получайте новые статьи на почту</p>
+                    <div class="d-flex gap-2">
+                        <input type="email" id="blog-subscribe-email" class="form-control form-control-sm rounded-0" placeholder="Email">
+                        <button id="blog-subscribe-btn" class="btn btn-dark rounded-0 btn-sm">→</button>
+                    </div>
+                    <div id="blog-subscribe-message" class="mt-2 small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Подписка со страницы блога
+    document.getElementById('blog-subscribe-btn').addEventListener('click', function() {
+        var email = document.getElementById('blog-subscribe-email').value;
+        var messageDiv = document.getElementById('blog-subscribe-message');
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        if (!email || !email.includes('@')) {
+            messageDiv.innerHTML = '<div class="alert alert-danger py-1 small">Введите корректный email</div>';
+            return;
+        }
+
+        messageDiv.innerHTML = '<div class="text-muted small">Отправка...</div>';
+
+        fetch('/shop/subscribe/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: 'email=' + encodeURIComponent(email)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                messageDiv.innerHTML = '<div class="alert alert-success py-1 small">' + data.message + '</div>';
+                document.getElementById('blog-subscribe-email').value = '';
+                if (data.discount_code) {
+                    setTimeout(function() { location.reload(); }, 1500);
+                }
+            } else {
+                messageDiv.innerHTML = '<div class="alert alert-danger py-1 small">' + data.message + '</div>';
+            }
+        })
+        .catch(function() {
+            messageDiv.innerHTML = '<div class="alert alert-danger py-1 small">Ошибка, попробуйте позже</div>';
+        });
+    });
+</script>
+{% endblock %}

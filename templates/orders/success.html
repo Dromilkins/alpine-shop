@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Заказ оформлен — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mb-4">
+                <div class="display-1 text-success">✅</div>
+            </div>
+            <h1 class="fw-bold mb-3">Заказ успешно оформлен!</h1>
+            
+            {% if order.is_paid %}
+            <div class="alert alert-success border-0 rounded-4 mb-4">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    <span class="fw-semibold">Оплата прошла успешно!</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info border-0 rounded-4 mb-4">
+                <span class="fw-semibold">Оплата при получении</span>
+            </div>
+            {% endif %}
+            
+            <p class="text-muted mb-2">Номер вашего заказа: <strong class="fs-4">#{{ order.id }}</strong></p>
+            <p class="text-muted mb-4">Мы отправили подтверждение на почту <strong>{{ order.email }}</strong></p>
+            
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Детали заказа</h5>
+                    <div class="row">
+                        <div class="col-md-6 text-start">
+                            <p class="small text-muted mb-1">Получатель</p>
+                            <p class="fw-semibold">{{ order.first_name }} {{ order.last_name }}</p>
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <p class="small text-muted mb-1">Телефон</p>
+                            <p class="fw-semibold">{{ order.phone }}</p>
+                        </div>
+                        <div class="col-12 text-start mt-2">
+                            <p class="small text-muted mb-1">Адрес доставки</p>
+                            <p class="fw-semibold">{{ order.address }}</p>
+                        </div>
+                        <div class="col-12 text-start mt-2">
+                            <p class="small text-muted mb-1">Состав заказа</p>
+                            {% for item in order.items.all %}
+                            <p class="mb-1">{{ item.product.name }} x {{ item.quantity }} — {{ item.get_cost|floatformat:0 }} ₽</p>
+                            {% endfor %}
+                        </div>
+                        <div class="col-12 text-start mt-3 pt-2 border-top">
+                            <p class="fw-bold fs-5 mb-0">Итого: {{ order.get_total_cost|floatformat:0 }} ₽</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'shop:product_list' %}" class="btn btn-dark rounded-3 px-4 py-2">Продолжить покупки →</a>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-dark rounded-3 px-4 py-2">Мои заказы</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

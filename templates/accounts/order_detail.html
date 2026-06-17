@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Заказ #{{ order.id }} — ALPGEAR{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold display-5">Заказ #{{ order.id }}</h1>
+                <a href="{% url 'accounts:orders' %}" class="btn btn-outline-dark rounded-0">← Все заказы</a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Статус</div>
+                            <div class="fw-semibold">
+                                {% if order.status == 'pending' %}
+                                 Ожидает оплаты
+                                {% elif order.status == 'new' %}
+                                 Новый
+                                {% elif order.status == 'processing' %}
+                                 В обработке
+                                {% elif order.status == 'shipped' %}
+                                 Отправлен
+                                {% elif order.status == 'delivered' %}
+                                 Доставлен
+                                {% elif order.status == 'canceled' %}
+                                Отменён
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Дата заказа</div>
+                            <div class="fw-semibold">{{ order.created|date:"d M Y, H:i" }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Способ доставки</div>
+                            <div class="fw-semibold">
+                                {% if order.delivery_method == 'courier' %} Курьер
+                                {% elif order.delivery_method == 'pickup' %}Самовывоз
+                                {% else %}📬 Почта{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Способ оплаты</div>
+                            <div class="fw-semibold">
+                                {% if order.payment_method == 'online' %} Онлайн
+                                {% else %} Наличными{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Адрес доставки</div>
+                            <div class="fw-semibold">{{ order.address }}</div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="small text-muted text-uppercase mb-1">Получатель</div>
+                            <div class="fw-semibold">{{ order.first_name }} {{ order.last_name }}</div>
+                            <div class="small">{{ order.phone }} | {{ order.email }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">Состав заказа</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% for item in order.items.all %}
+                    <div class="d-flex justify-content-between align-items-center py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div>
+                            <div class="fw-semibold">{{ item.product.name }}</div>
+                            <div class="small text-muted">{{ item.product.category.name }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div>{{ item.quantity }} шт × {{ item.price|floatformat:0 }} ₽</div>
+                            <div class="fw-semibold">{{ item.get_cost|floatformat:0 }} ₽</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if order.discount_amount > 0 %}
+                    <div class="d-flex justify-content-between py-3 border-bottom">
+                        <span>Скидка</span>
+                        <span class="text-success">-{{ order.discount_amount|floatformat:0 }} ₽</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between pt-3">
+                        <span class="fw-bold fs-5">Итого</span>
+                        <span class="fw-bold fs-5">{{ order.get_total_cost|floatformat:0 }} ₽</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
