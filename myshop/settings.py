@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
+import dj_database_url
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-tvoy-secret-key'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ваш-ключ-для-разработки')
 
 DEBUG = True
 
